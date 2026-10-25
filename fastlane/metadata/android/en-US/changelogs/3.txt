@@ -1,0 +1,1 @@
+Two explicit buttons: clean a copy or overwrite the original. Detailed metadata scan, report of what was cleaned, new icon.

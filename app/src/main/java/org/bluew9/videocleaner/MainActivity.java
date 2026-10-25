@@ -33,7 +33,6 @@ import android.provider.DocumentsContract;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import java.io.File;
@@ -65,8 +64,7 @@ public class MainActivity extends Activity {
     private boolean basicScan;
     private int trackNo;
     private TextView info;
-    private Button pick, clean;
-    private Switch replaceSwitch;
+    private Button pick, clean, cleanOrig;
 
     @Override
     protected void onCreate(Bundle b) {
@@ -93,21 +91,13 @@ public class MainActivity extends Activity {
         pick = button("Select video");
         root.addView(pick);
 
-        replaceSwitch = new Switch(this);
-        replaceSwitch.setText("Clean the original file (no copy)");
-        replaceSwitch.setTextColor(Color.WHITE);
-        root.addView(replaceSwitch);
-
-        TextView warn = new TextView(this);
-        warn.setText("On: your file is overwritten permanently.\nOff: a cleaned copy is saved and the original stays untouched.");
-        warn.setTextColor(0xFF8FA3B5);
-        warn.setTextSize(13);
-        warn.setPadding(0, 8, 0, pad / 2);
-        root.addView(warn);
-
-        clean = button("Clean and save a copy");
-        clean.setEnabled(false);
+        clean = button("Clean - save a copy (original kept)");
         root.addView(clean);
+
+        cleanOrig = button("Clean - overwrite the original (no copy)");
+        cleanOrig.setBackgroundColor(0xFF7A2E2E);
+        root.addView(cleanOrig);
+        setClean(false);
 
         info = new TextView(this);
         info.setTextColor(0xFFD6E0EA);
@@ -118,9 +108,6 @@ public class MainActivity extends Activity {
         root.addView(sv, new LinearLayout.LayoutParams(-1, 0, 1f));
         setContentView(root);
 
-        replaceSwitch.setOnCheckedChangeListener((v, on) ->
-                clean.setText(on ? "Clean the original" : "Clean and save a copy"));
-
         pick.setOnClickListener(v -> {
             Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             i.addCategory(Intent.CATEGORY_OPENABLE);
@@ -130,21 +117,24 @@ public class MainActivity extends Activity {
         });
 
         clean.setOnClickListener(v -> {
-            if (replaceSwitch.isChecked()) {
-                new AlertDialog.Builder(this)
-                        .setTitle("Replace the original?")
-                        .setMessage("The original video will be overwritten with the cleaned version. This cannot be undone.")
-                        .setPositiveButton("Replace", (d, w) -> startJob(src, true))
-                        .setNegativeButton("Cancel", null)
-                        .show();
-            } else {
-                Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                i.addCategory(Intent.CATEGORY_OPENABLE);
-                i.setType("video/mp4");
-                i.putExtra(Intent.EXTRA_TITLE, "clean_video.mp4"); // generic name, nothing carried over
-                startActivityForResult(i, SAVE);
-            }
+            Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            i.addCategory(Intent.CATEGORY_OPENABLE);
+            i.setType("video/mp4");
+            i.putExtra(Intent.EXTRA_TITLE, "clean_video.mp4"); // generic name, nothing carried over
+            startActivityForResult(i, SAVE);
         });
+
+        cleanOrig.setOnClickListener(v -> new AlertDialog.Builder(this)
+                .setTitle("Overwrite the original?")
+                .setMessage("The original video will be replaced by the cleaned version. This cannot be undone.")
+                .setPositiveButton("Overwrite", (d, w) -> startJob(src, true))
+                .setNegativeButton("Cancel", null)
+                .show());
+    }
+
+    private void setClean(boolean on) {
+        clean.setEnabled(on);
+        cleanOrig.setEnabled(on);
     }
 
     private Button button(String t) {
@@ -164,14 +154,14 @@ public class MainActivity extends Activity {
         if (res != RESULT_OK || d == null || d.getData() == null) return;
         if (req == PICK) {
             src = d.getData();
-            clean.setEnabled(false);
+            setClean(false);
             info.setText("Scanning...");
             new Thread(() -> {
                 Map<String, String> m = scan(src);
                 before = m;
                 runOnUiThread(() -> {
                     info.setText(detectedText(m));
-                    clean.setEnabled(true);
+                    setClean(true);
                 });
             }).start();
         } else if (req == SAVE) {
@@ -196,7 +186,7 @@ public class MainActivity extends Activity {
     // ------------------------------------------------------------------ job
 
     private void startJob(Uri dest, boolean replace) {
-        clean.setEnabled(false);
+        setClean(false);
         pick.setEnabled(false);
         info.setText("Cleaning...");
         new Thread(() -> {
