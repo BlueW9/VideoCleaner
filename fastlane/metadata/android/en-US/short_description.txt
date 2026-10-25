@@ -1,0 +1,1 @@
+Strip GPS, dates and tags from videos. Offline, no permissions.

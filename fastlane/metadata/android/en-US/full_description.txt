@@ -1,0 +1,3 @@
+Video Cleaner removes sensitive metadata (GPS location, creation date, titles, author tags, extra tracks) from your videos by copying only the audio and video streams into a fresh file. No re-encoding, so quality is untouched.
+
+Privacy: no permissions, no internet, no analytics, no ads, no logs, zero third-party libraries. Free software under GPL-3.0.
