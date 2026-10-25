@@ -160,7 +160,7 @@ public class MainActivity extends Activity {
         } catch (Exception e) {
             sb.append("(could not read: ").append(e.getMessage()).append(")\n");
         } finally {
-            r.release();
+            try { r.release(); } catch (Exception ignored) {}
         }
         return sb.length() == 0 ? "None of the listed fields." : sb.toString();
     }
@@ -175,7 +175,7 @@ public class MainActivity extends Activity {
             String s = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
             if (s != null) rot = Integer.parseInt(s);
         } finally {
-            r.release();
+            try { r.release(); } catch (Exception ignored) {}
         }
 
         MediaExtractor ex = new MediaExtractor();
