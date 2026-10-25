@@ -1,0 +1,16 @@
+name: mobsfscan
+on:
+  push: { branches: [main] }
+  pull_request: { branches: [main] }
+  schedule: [{ cron: '23 3 * * 1' }]
+permissions: { contents: read }
+jobs:
+  mobsfscan:
+    runs-on: ubuntu-latest
+    permissions: { security-events: write, contents: read }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: MobSF/mobsfscan@main
+        with: { args: '. --type android --sarif --output results.sarif || true' }
+      - uses: github/codeql-action/upload-sarif@v3
+        with: { sarif_file: results.sarif }
