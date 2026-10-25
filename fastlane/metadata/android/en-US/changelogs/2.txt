@@ -1,0 +1,1 @@
+Detailed metadata scan, option to clean the original file, report of what was cleaned, new icon.
